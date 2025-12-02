@@ -119,5 +119,11 @@ resource "aws_key_pair" "deployer" {
   public_key = file("~/.ssh/deployer-key.pub")
 }
 
+# create target group
 
+# create security group for ALB
+
+# create ALB
+
+# create listener WAF
 
