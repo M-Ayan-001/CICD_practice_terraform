@@ -13,15 +13,17 @@ data "aws_availability_zones" "available" {}
 
 # creating some subnets
 resource "aws_subnet" "subnet1" {
-  vpc_id            = aws_vpc.createVPC.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id                  = aws_vpc.createVPC.id
+  cidr_block              = "10.0.1.0/24"
+  availability_zone       = data.aws_availability_zones.available.names[0]
+  map_public_ip_on_launch = true
 }
 
 resource "aws_subnet" "subnet2" {
-  vpc_id            = aws_vpc.createVPC.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
+  vpc_id                  = aws_vpc.createVPC.id
+  cidr_block              = "10.0.2.0/24"
+  availability_zone       = data.aws_availability_zones.available.names[1]
+  map_public_ip_on_launch = true
 }
 
 # Create Internet Gateway
@@ -71,9 +73,9 @@ resource "aws_security_group" "allow_tls" {
 # setting inbound rules for EC2 security group
 resource "aws_vpc_security_group_ingress_rule" "allow_tcp_ipv4" {
   security_group_id = aws_security_group.allow_tls.id
-  cidr_ipv4         = aws_vpc.createVPC.cidr_block
+  cidr_ipv4         = "103.170.182.167/32"
   from_port         = 22
-  ip_protocol       = "ssh"
+  ip_protocol       = "tcp"
   to_port           = 22
 }
 
@@ -82,7 +84,7 @@ resource "aws_vpc_security_group_ingress_rule" "allow_http_ipv4" {
   security_group_id = aws_security_group.allow_tls.id
   cidr_ipv4         = aws_vpc.createVPC.cidr_block
   from_port         = 80
-  ip_protocol       = "http"
+  ip_protocol       = "tcp"
   to_port           = 80
 }
 
@@ -100,6 +102,8 @@ resource "aws_instance" "createEC2" {
   subnet_id     = aws_subnet.subnet1.id
 
   key_name = aws_key_pair.deployer.key_name
+
+  associate_public_ip_address = true
 
   tags = {
     Name = "cicd-ec2"
@@ -149,12 +153,12 @@ resource "aws_security_group" "allow_tls_alb" {
 }
 
 # setting inbound rules for ALB security group
-resource "aws_vpc_security_group_ingress_rule" "allow_tls_ipv4_alb" {
+resource "aws_vpc_security_group_ingress_rule" "allow_https_ipv4_alb" {
   security_group_id = aws_security_group.allow_tls_alb.id
-  cidr_ipv4         = aws_vpc.createVPC.cidr_block
-  from_port         = 22
-  ip_protocol       = "ssh"
-  to_port           = 22
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 443
+  ip_protocol       = "tcp"
+  to_port           = 443
 }
 
 # setting inbound rules for ALB security group
@@ -162,7 +166,7 @@ resource "aws_vpc_security_group_ingress_rule" "allow_http_ipv4_alb" {
   security_group_id = aws_security_group.allow_tls_alb.id
   cidr_ipv4         = aws_vpc.createVPC.cidr_block
   from_port         = 80
-  ip_protocol       = "http"
+  ip_protocol       = "tcp"
   to_port           = 80
 }
 
