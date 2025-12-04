@@ -80,12 +80,12 @@ resource "aws_vpc_security_group_ingress_rule" "allow_tcp_ipv4" {
 }
 
 # setting inbound rules for EC2 security group
-resource "aws_vpc_security_group_ingress_rule" "allow_http_ipv4" {
-  security_group_id = aws_security_group.allow_tls.id
-  cidr_ipv4         = aws_vpc.createVPC.cidr_block
-  from_port         = 80
-  ip_protocol       = "tcp"
-  to_port           = 80
+resource "aws_vpc_security_group_ingress_rule" "allow_http_from_alb" {
+  security_group_id            = aws_security_group.allow_tls.id     # EC2 SG
+  referenced_security_group_id = aws_security_group.allow_tls_alb.id # ALB SG
+  from_port                    = 80
+  ip_protocol                  = "tcp"
+  to_port                      = 80
 }
 
 # setting outbound rules for EC2 security group
@@ -104,6 +104,14 @@ resource "aws_instance" "createEC2" {
   key_name = aws_key_pair.deployer.key_name
 
   associate_public_ip_address = true
+
+  user_data = <<-EOF
+    #!/bin/bash
+    yes | sudo apt update
+    yes | sudo apt install apache2
+    echo "<h1>Server Details</h1><p><strong>Hostname:</strong> $(hostname)</p><p><strong>IP Address:</strong> $(hostname -I | cut -d' ' -f1)</p>" > /var/www/html/index.html
+    sudo systemctl restart apache2
+  EOF
 
   tags = {
     Name = "cicd-ec2"
@@ -164,7 +172,7 @@ resource "aws_vpc_security_group_ingress_rule" "allow_https_ipv4_alb" {
 # setting inbound rules for ALB security group
 resource "aws_vpc_security_group_ingress_rule" "allow_http_ipv4_alb" {
   security_group_id = aws_security_group.allow_tls_alb.id
-  cidr_ipv4         = aws_vpc.createVPC.cidr_block
+  cidr_ipv4         = "0.0.0.0/0"
   from_port         = 80
   ip_protocol       = "tcp"
   to_port           = 80
