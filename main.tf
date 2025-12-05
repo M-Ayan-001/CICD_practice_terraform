@@ -135,8 +135,8 @@ resource "aws_instance" "createEC2" {
 
 # creating key pair for SSH
 resource "aws_key_pair" "deployer" {
-  key_name   = "deployer-key"
-  public_key = file("~/.ssh/deployer-key.pub")
+  key_name   = "cicd-ec2"
+  public_key = file("C:/Users/Ayan/.ssh/cicd-ec2.pub")
 }
 
 # create target group
