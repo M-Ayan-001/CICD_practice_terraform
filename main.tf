@@ -106,11 +106,17 @@ resource "aws_instance" "createEC2" {
   associate_public_ip_address = true
 
   user_data = <<-EOF
-    #!/bin/bash
-    yes | sudo apt update
-    yes | sudo apt install apache2
-    echo "<h1>Server Details</h1><p><strong>Hostname:</strong> $(hostname)</p><p><strong>IP Address:</strong> $(hostname -I | cut -d' ' -f1)</p>" > /var/www/html/index.html
-    sudo systemctl restart apache2
+      #!/bin/bash
+      sudo apt update -y
+      sudo apt install -y nodejs npm git
+      npm install -g pm2
+
+      cd /home/ubuntu
+      git clone https://github.com/M-Ayan-001/CICD_practice.git app
+      cd app
+      npm install
+      pm2 start ecosystem.config.js
+      pm2 save
   EOF
 
   tags = {
